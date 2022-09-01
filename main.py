@@ -1,10 +1,10 @@
 from typing import Union
 
-from fastapi import Cookie, FastAPI
+from fastapi import FastAPI, Header
 
 app = FastAPI()
 
 
 @app.get("/items/")
-async def read_items(ads_id: Union[str, None] = Cookie(default=None)):
-    return {"ads_id": ads_id}
+async def read_items(user_agent: Union[str, None] = Header(default=None)):
+    return {"User-Agent": user_agent}
