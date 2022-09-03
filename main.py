@@ -1,37 +1,12 @@
-from typing import List
-
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException
 
 app = FastAPI()
 
-
-@app.post("/files/")
-async def create_files(
-    files: List[bytes] = File(description="Multiple files as bytes"),
-):
-    return {"file_sizes": [len(file) for file in files]}
+items = {"foo": "The Foo Wrestlers"}
 
 
-@app.post("/uploadfiles/")
-async def create_upload_files(
-    files: List[UploadFile] = File(description="Multiple files as UploadFile"),
-):
-    return {"filenames": [file.filename for file in files]}
-
-
-@app.get("/")
-async def main():
-    content = """
-<body>
-<form action="/files/" enctype="multipart/form-data" method="post">
-<input name="files" type="file" multiple>
-<input type="submit">
-</form>
-<form action="/uploadfiles/" enctype="multipart/form-data" method="post">
-<input name="files" type="file" multiple>
-<input type="submit">
-</form>
-</body>
-    """
-    return HTMLResponse(content=content)
+@app.get("/items/{item_id}")
+async def read_item(item_id: str):
+    if item_id not in items:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return {"item": items[item_id]}
