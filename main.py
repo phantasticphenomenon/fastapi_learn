@@ -1,21 +1,32 @@
 from typing import Union
 
 from fastapi import Depends, FastAPI
+from fastapi.security import OAuth2PasswordBearer
+from pydantic import BaseModel
 
 app = FastAPI()
 
-
-async def common_parameters(
-    q: Union[str, None] = None, skip: int = 0, limit: int = 100
-):
-    return {"q": q, "skip": skip, "limit": limit}
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-@app.get("/items/")
-async def read_items(commons: dict = Depends(common_parameters)):
-    return commons
+class User(BaseModel):
+    username: str
+    email: Union[str, None] = None
+    full_name: Union[str, None] = None
+    disabled: Union[bool, None] = None
 
 
-@app.get("/users/")
-async def read_users(commons: dict = Depends(common_parameters)):
-    return commons
+def fake_decode_token(token):
+    return User(
+        username=token + "fakedecoded", email="john@example.com", full_name="John Doe"
+    )
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    user = fake_decode_token(token)
+    return user
+
+
+@app.get("/users/me")
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
